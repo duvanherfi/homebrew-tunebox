@@ -1,0 +1,49 @@
+name: Follow the releases
+
+# The tap keeps itself current instead of being pushed to. Tunebox publishes a
+# release; this looks, and if the disk image it carries is newer than what the
+# cask points at, it rewrites the cask and commits.
+#
+# The direction matters. Pushing from the app's repository would need a token
+# with write access here, stored as a secret over there — and that repository
+# deliberately has no repository-level secrets, because the Android signing key
+# lives in an environment so that no ordinary workflow can reach it. Pulling
+# needs nothing: the releases API is public, and GITHUB_TOKEN can already write
+# to the repository it belongs to.
+on:
+  schedule:
+    # Hourly. A release is worth installing within the hour, and GitHub runs
+    # cron when it has room rather than on the minute.
+    - cron: '23 * * * *'
+  # Because the schedule is not immediate, and because GitHub switches cron off
+  # in a repository that has seen no commits for sixty days — which is exactly
+  # what a quiet tap looks like.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cask:
+    name: Point the cask at the latest release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Pinned by commit rather than by tag: a tag is a label its owner can
+      # move, and this job can write to the branch that decides what people
+      # install.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - id: render
+        run: echo "version=$(tool/render_cask.sh)" >> "$GITHUB_OUTPUT"
+
+      - name: Commit if it moved
+        env:
+          VERSION: ${{ steps.render.outputs.version }}
+        run: |
+          git add Casks/tunebox.rb
+          git diff --cached --quiet && { echo "already pointing at the latest"; exit 0; }
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "tunebox ${VERSION/,/+}"
+          git push
