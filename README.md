@@ -9,17 +9,42 @@ brew install --cask duvanherfi/tunebox/tunebox
 
 Para actualizar, `brew upgrade --cask tunebox`.
 
-## Por qué existe
+## Esto no te ahorra el aviso de Gatekeeper
 
-La app de macOS está firmada, pero con una firma ad-hoc y no con un certificado
-de pago de Apple. Eso basta para que funcione, y no basta para que macOS la abra
-sin preguntar: cualquier copia que llega por un navegador trae el atributo de
-cuarentena, y Gatekeeper la bloquea hasta que quien la instala la autoriza a
-mano desde Ajustes del Sistema.
+Conviene decirlo antes que nada, porque es fácil suponer lo contrario.
 
-Homebrew quita ese atributo por su cuenta, así que instalada por aquí la app se
-abre a la primera. Es la única forma de saltarse ese paso sin notarizar, y
-notarizar pide el certificado de pago.
+La app de macOS está firmada, pero con una firma **ad-hoc** y no con un
+certificado de pago de Apple. Así que la primera vez macOS se niega a abrirla y
+hay que autorizarla a mano desde **Ajustes del Sistema › Privacidad y
+seguridad**.
+
+**Homebrew no evita ese paso: lo aplica él mismo.** Marca en cuarentena lo que
+instala, igual que un navegador. Y en las actualizaciones tampoco se libra: brew
+solo libera la cuarentena de una versión nueva si la identidad de firma coincide
+con la de la anterior, y la de una firma ad-hoc es el `cdhash` del binario, que
+cambia en cada build:
+
+```
+ad-hoc        designated => cdhash H"08b5a248…"
+Developer ID  designated => … certificate leaf[subject.OU] = ABCDE12345
+```
+
+Lo único que quita ese paso de verdad es **notarizar**, y eso pide el
+certificado de pago. Si algún día se hace, este tap se beneficia solo: la
+identidad pasa a ser estable y brew deja de re-marcar cada actualización.
+
+## Entonces para qué sirve
+
+Para lo que en macOS no hay de otra forma:
+
+- **Actualizar.** La app no se actualiza sola en Mac — el actualizador integrado
+  es de Android, porque su seguridad se apoya en comparar el certificado de
+  firma, y en macOS no hay ninguno estable que comparar. Sin esto tocaría volver
+  a la página de releases cada vez.
+- **Instalar y desinstalar con un comando**, incluidos los restos que la app
+  deja fuera de su carpeta (`brew uninstall --zap --cask tunebox`).
+- **Comprobar la descarga.** El cask lleva el `sha256` de la imagen de disco; si
+  no coincide, brew se niega a instalar.
 
 Si prefieres el `.dmg` suelto, está en las
 [releases](https://github.com/duvanherfi/tunebox/releases), y las notas de cada
@@ -67,8 +92,3 @@ gh workflow run cask.yml --repo duvanherfi/homebrew-tunebox
 
 o el botón **Run workflow** en la pestaña Actions.
 
-## Verificar antes de instalar
-
-El cask lleva el `sha256` de la imagen de disco, sacado del archivo que GitHub
-está sirviendo. Si no coincide con lo que descargas, `brew` se niega a instalar
-— que es casi todo aquello para lo que sirve la suma.
