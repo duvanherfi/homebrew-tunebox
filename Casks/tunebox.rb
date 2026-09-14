@@ -24,7 +24,9 @@ cask "tunebox" do
     end
   end
 
-  depends_on macos: :catalina
+  # No `depends_on macos:` here. The app deploys against 10.15, and Homebrew has
+  # disabled every symbol older than :big_sur — brew itself no longer runs on
+  # those releases — so a floor it refuses to name is a floor it never checks.
 
   app "tunebox.app"
 
