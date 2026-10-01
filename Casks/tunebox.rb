@@ -1,6 +1,6 @@
 cask "tunebox" do
-  version "0.1.11,12"
-  sha256 "093d40cbf3ed732886f5a9b7e0531181a79952e7a78ee29338e19c0fab4e6fc4"
+  version "0.1.12,13"
+  sha256 "22f233aff0cc59658241968686ecdf36f938d20e4df789c3a9ddb6fa09ba5e2c"
 
   url "https://github.com/duvanherfi/tunebox/releases/download/v#{version.csv.first}/tunebox-#{version.csv.first}+#{version.csv.second}.dmg"
   name "Tunebox"
